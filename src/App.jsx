@@ -275,6 +275,37 @@ function ProjectsPage({ projects }) {
 /* ═══ CONTACT ═══ */
 function Contact() {
   const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', subject: '', message: '' })
+
+  const handleSend = async () => {
+    if (!form.firstName || !form.email || !form.message) return
+    setSending(true)
+    try {
+      await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: 'service_dt7onew',
+          template_id: 'template_d5azetn',
+          user_id: 'yFKA8UF0az9q-f_qB',
+          template_params: {
+            name: form.firstName + ' ' + form.lastName,
+            email: form.email,
+            phone: form.phone,
+            title: form.subject,
+            message: form.message,
+          }
+        })
+      })
+      setSent(true)
+    } catch (e) {
+      console.error('EmailJS error:', e)
+      alert('Erreur lors de l\'envoi. Veuillez réessayer.')
+    }
+    setSending(false)
+  }
+
   return (
     <section className="sec" style={{ marginTop: 72 }}>
       <div className="sec-h"><h2>Contactez-Nous</h2><p>Réponse sous 24h.</p><div className="line" /></div>
@@ -286,12 +317,12 @@ function Contact() {
         </div>
         <div>{sent ? (<div style={{ background: '#192f23', color: 'white', padding: 40, borderRadius: 16, textAlign: 'center' }}><div style={{ fontSize: 48, marginBottom: 16 }}>✅</div><h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24 }}>Message envoyé !</h3></div>) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div className="form-row"><input className="input" placeholder="Prénom" /><input className="input" placeholder="Nom" /></div>
-            <input className="input" placeholder="Email" type="email" />
-            <input className="input" placeholder="Téléphone" type="tel" />
-            <select className="input" defaultValue=""><option value="" disabled>Objet</option><option>Food Truck</option><option>Tiny House</option><option>Location</option><option>Autre</option></select>
-            <textarea className="input" placeholder="Votre projet..." />
-            <button className="btn-g" style={{ alignSelf: 'flex-start' }} onClick={() => setSent(true)}>Envoyer →</button>
+            <div className="form-row"><input className="input" placeholder="Prénom" value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} /><input className="input" placeholder="Nom" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} /></div>
+            <input className="input" placeholder="Email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+            <input className="input" placeholder="Téléphone" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+            <select className="input" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}><option value="" disabled>Objet</option><option>Food Truck</option><option>Tiny House</option><option>Location</option><option>Autre</option></select>
+            <textarea className="input" placeholder="Votre projet..." value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
+            <button className="btn-g" style={{ alignSelf: 'flex-start' }} onClick={handleSend} disabled={sending || !form.firstName || !form.email || !form.message}>{sending ? 'Envoi en cours...' : 'Envoyer →'}</button>
           </div>
         )}</div>
       </div>
