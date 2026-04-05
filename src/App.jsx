@@ -109,7 +109,7 @@ function Footer() {
         <div><h4>Services</h4><ul><li>Food Trucks</li><li>Vans Aménagés</li><li>Tiny Houses</li><li>Location</li></ul></div>
         <div><h4>Contact</h4><ul><li>13 rue du Bissonnet, 14370 Argences</li><li>06.03.10.62.10 / 06.88.42.31.21</li><li>nomadcraft14370@gmail.com</li></ul></div>
       </div>
-      <div className="footer-bot" onClick={handleSecret}>© 2026 NomadCraft — Tous droits réservés</div>
+      <div className="footer-bot" onClick={handleSecret}>© 2026 NomadCraft — Tous droits réservés · <span style={{ cursor: 'pointer', textDecoration: 'underline', opacity: 0.7 }} onClick={e => { e.stopPropagation(); go('/mentions-legales') }}>Mentions légales</span> · <span style={{ cursor: 'pointer', textDecoration: 'underline', opacity: 0.7 }} onClick={e => { e.stopPropagation(); go('/politique-confidentialite') }}>Confidentialité</span></div>
     </footer>
   )
 }
@@ -502,6 +502,95 @@ function Admin({ vans, setVans, bookings, setBookings, devisData, setDevisData, 
   )
 }
 
+/* ═══ MENTIONS LÉGALES ═══ */
+function MentionsLegales() {
+  return (
+    <section className="sec" style={{ marginTop: 72 }}>
+      <div className="sec-h"><h2>Mentions Légales</h2><div className="line" /></div>
+      <div style={{ maxWidth: 800, margin: '0 auto', lineHeight: 1.8, color: '#555' }}>
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>1. Éditeur du site</h3>
+        <p>Le site <strong>nomadcraft.fr</strong> est édité par :</p>
+        <p>NomadCraft SARL (en cours d'immatriculation)<br />
+        Siège social : 13 rue du Bissonnet, 14370 Argences<br />
+        Téléphone : 06.03.10.62.10 / 06.88.42.31.21<br />
+        Email : nomadcraft14370@gmail.com<br />
+        Responsable de la publication : Enzo Pensato-Gleyze<br />
+        SIRET : en cours d'obtention</p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>2. Hébergement</h3>
+        <p>Le site est hébergé par :<br />
+        Vercel Inc.<br />
+        440 N Barranca Ave #4133, Covina, CA 91723, États-Unis<br />
+        Site web : vercel.com</p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>3. Propriété intellectuelle</h3>
+        <p>L'ensemble du contenu du site (textes, images, logo, design) est la propriété exclusive de NomadCraft, sauf mention contraire. Toute reproduction, distribution ou utilisation sans autorisation préalable est interdite.</p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>4. Responsabilité</h3>
+        <p>Les informations fournies sur ce site le sont à titre indicatif. NomadCraft ne saurait garantir l'exactitude, la complétude ou l'actualité des informations diffusées. Les estimations de prix obtenues via le configurateur en ligne sont données à titre indicatif et ne constituent pas un devis contractuel.</p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>5. Paiement en ligne</h3>
+        <p>Les paiements en ligne sont sécurisés par Stripe (Stripe, Inc.). Les données bancaires ne sont jamais stockées sur nos serveurs. Elles sont transmises directement à Stripe via une connexion chiffrée SSL/TLS.</p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>6. Droit applicable</h3>
+        <p>Le présent site et ses mentions légales sont régis par le droit français. En cas de litige, les tribunaux de Caen seront seuls compétents.</p>
+
+        <p style={{ marginTop: 40, fontSize: 13, color: '#999' }}>Dernière mise à jour : avril 2026</p>
+      </div>
+    </section>
+  )
+}
+
+/* ═══ POLITIQUE DE CONFIDENTIALITÉ ═══ */
+function PolitiqueConfidentialite() {
+  return (
+    <section className="sec" style={{ marginTop: 72 }}>
+      <div className="sec-h"><h2>Politique de Confidentialité</h2><div className="line" /></div>
+      <div style={{ maxWidth: 800, margin: '0 auto', lineHeight: 1.8, color: '#555' }}>
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>1. Collecte des données</h3>
+        <p>NomadCraft collecte les données personnelles suivantes lorsque vous utilisez notre site :</p>
+        <p>— Formulaire de contact : prénom, nom, email, téléphone, message<br />
+        — Réservation de van : nom, email, téléphone, dates de réservation, données de paiement (traitées par Stripe)<br />
+        — Demande de devis : options sélectionnées et coordonnées</p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>2. Finalité du traitement</h3>
+        <p>Vos données sont collectées pour :</p>
+        <p>— Répondre à vos demandes de contact et de devis<br />
+        — Traiter vos réservations de vans<br />
+        — Effectuer les paiements en ligne via Stripe<br />
+        — Améliorer nos services</p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>3. Base légale</h3>
+        <p>Le traitement de vos données repose sur votre consentement (envoi du formulaire) et l'exécution d'un contrat (réservation et paiement).</p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>4. Destinataires des données</h3>
+        <p>Vos données sont accessibles uniquement par :</p>
+        <p>— NomadCraft (responsable du traitement)<br />
+        — Stripe Inc. (traitement des paiements)<br />
+        — Firebase / Google (hébergement de la base de données)<br />
+        — EmailJS (envoi des emails de contact)</p>
+        <p>Aucune donnée n'est vendue ou cédée à des tiers à des fins commerciales.</p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>5. Durée de conservation</h3>
+        <p>Les données de contact sont conservées 3 ans. Les données de réservation et de paiement sont conservées conformément aux obligations légales comptables (10 ans).</p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>6. Vos droits</h3>
+        <p>Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Vous pouvez exercer ces droits en nous contactant à : <strong>nomadcraft14370@gmail.com</strong></p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>7. Cookies</h3>
+        <p>Le site nomadcraft.fr n'utilise pas de cookies de tracking ou publicitaires. Seuls des cookies techniques essentiels au fonctionnement du site peuvent être déposés (authentification Firebase).</p>
+
+        <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: '#192f23', marginTop: 32, marginBottom: 12 }}>8. Contact</h3>
+        <p>Pour toute question relative à la protection de vos données :<br />
+        NomadCraft — 13 rue du Bissonnet, 14370 Argences<br />
+        nomadcraft14370@gmail.com</p>
+
+        <p style={{ marginTop: 40, fontSize: 13, color: '#999' }}>Dernière mise à jour : avril 2026</p>
+      </div>
+    </section>
+  )
+}
+
 /* ═══ APP ═══ */
 export default function App() {
   const [vans, setVans] = useState(DEFAULT_VANS)
@@ -531,6 +620,8 @@ export default function App() {
         <Route path="/construction" element={<Construction devisData={devisData} />} />
         <Route path="/projets" element={<ProjectsPage projects={projects} />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/mentions-legales" element={<MentionsLegales />} />
+        <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
         <Route path="/admin" element={<Admin vans={vans} setVans={setVans} bookings={bookings} setBookings={setBookings} devisData={devisData} setDevisData={setDevisData} projects={projects} setProjects={setProjects} />} />
       </Routes>
       <Footer />
