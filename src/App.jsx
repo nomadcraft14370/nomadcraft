@@ -160,9 +160,9 @@ function Home() {
     </div></div>
     <div className="parallax"><img src={IMAGES.parallax2} alt="" loading="lazy" /><div className="parallax-ov" /><div className="parallax-ct"><h2>Votre Tiny House, Votre Refuge</h2><p>Habitat compact, écologique et personnalisé.</p><button className="btn-p" onClick={() => go('/construction')}>Configurer ma Tiny House →</button></div></div>
     <div className="testi-band"><div className="testi-bg"><img src={IMAGES.lifestyle3} alt="" loading="lazy" /></div><div className="testi-ct"><h2>Ce Que Disent Nos Clients</h2><div className="testi-cards">
-      {[{ q: "NomadCraft a transformé notre Sprinter en palace roulant. Impeccable !", n: 'Lucas & Marie', r: 'Van aménagé', a: 'L' },
-        { q: "Mon food truck tourne depuis 6 mois, zéro souci. Top pro.", n: 'Sophie D.', r: 'Food Truck', a: 'S' },
-        { q: "Van loué 2 semaines en Bretagne. Super rapport qualité-prix !", n: 'Thomas R.', r: 'Location Van', a: 'T' }
+      {[{ q: "Je tiens à remercier l'équipe qui me guide pas-à-pas dans cette aventure ! Ils ont su s'adapter à mes contraintes et trouver des solutions en un temps record. Grâce à leur aide, leur soutien, leur professionnalisme et leur gentillesse, je me sens accompagné dans la réalisation des travaux !", n: 'V.T', r: 'Food Truck', a: 'V' },
+        { q: "Une équipe dynamique et à l'écoute de mes besoins. Merci à l'équipe NomadCraft pour leur réactivité et leur professionnalisme.", n: 'M.P', r: 'Installation de vitrine', a: 'M' },
+        { q: "Grâce à NomadCraft, j'ai pu apporter un espace authentique de travail. Ils ont été d'une aide précieuse dans les différentes démarches et conception de ce projet.", n: 'I.L', r: 'Tiny House', a: 'I' }
       ].map((t, i) => <div key={i} className="testi-card"><p>"{t.q}"</p><div className="testi-author"><div className="testi-avatar">{t.a}</div><div><div className="testi-name">{t.n}</div><div className="testi-role">{t.r}</div></div></div></div>)}
     </div></div></div>
     <section className="sec" style={{ textAlign: 'center' }}><div className="sec-h"><h2>Prêt à Lancer Votre Projet ?</h2><p>Estimation gratuite en quelques clics.</p><div className="line" /></div><button className="btn-p" style={{ fontSize: 18, padding: '16px 40px' }} onClick={() => go('/construction')}>Démarre ton projet →</button></section>
@@ -240,11 +240,42 @@ function LocationPage({ vans, bookings, setBookings }) {
 
 /* ═══ CONSTRUCTION ═══ */
 function Construction({ devisData }) {
-  const cats = Object.keys(devisData); const [ac, setAc] = useState(cats[0] || ''); const [sel, setSel] = useState({}); const [sent, setSent] = useState(false)
+  const cats = Object.keys(devisData); const [ac, setAc] = useState(cats[0] || ''); const [sel, setSel] = useState({}); const [step, setStep] = useState('config'); const [sending, setSending] = useState(false)
+  const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' })
   const k = (c, s, l) => c + '|' + s + '|' + l
   const toggle = (cat, st, stype, label, price) => { setSel(prev => { const n = { ...prev }; const ky = k(cat, st, label); if (stype === 'radio') { devisData[cat].sections.find(s => s.title === st).items.forEach(it => { delete n[k(cat, st, it.label)] }); n[ky] = { label, price, cat } } else { if (n[ky]) delete n[ky]; else n[ky] = { label, price, cat } }; return n }) }
   const isSel = (c, s, l) => !!sel[k(c, s, l)]
   const arr = Object.values(sel).filter(s => s.cat === ac); const total = arr.reduce((a, s) => a + s.price, 0)
+
+  const handleSendDevis = async () => {
+    if (!form.name || !form.email || !form.phone) return
+    setSending(true)
+    const recap = arr.map(s => `• ${s.label} — ${s.price.toLocaleString('fr-FR')} €`).join('\n')
+    try {
+      await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: 'service_dt7onew',
+          template_id: 'template_d5azetn',
+          user_id: 'yFKA8UF0az9q-f_qB',
+          template_params: {
+            name: form.name,
+            email: form.email,
+            phone: form.phone,
+            title: `Demande de devis — ${ac}`,
+            message: `Catégorie : ${ac}\n\nOptions sélectionnées :\n${recap}\n\nTotal estimé : ${total.toLocaleString('fr-FR')} €\n\nMessage : ${form.message || 'Aucun'}`,
+          }
+        })
+      })
+      setStep('done')
+    } catch (e) {
+      console.error('EmailJS error:', e)
+      alert('Erreur lors de l\'envoi. Veuillez réessayer.')
+    }
+    setSending(false)
+  }
+
   if (!cats.length) return <section className="sec" style={{ marginTop: 72 }}><div className="sec-h"><h2>Construction</h2><p>Aucune catégorie.</p></div></section>
   return (
     <section className="sec" style={{ marginTop: 72 }}>
@@ -252,7 +283,38 @@ function Construction({ devisData }) {
       <div className="devis-cats">{cats.map(c => <button key={c} className={`devis-cat ${ac === c ? 'act' : ''}`} onClick={() => setAc(c)}><span style={{ fontSize: 20 }}>{devisData[c].icon}</span> {c}</button>)}</div>
       <div className="devis-layout">
         <div>{devisData[ac]?.sections.map((sec, si) => (<div key={si} className="devis-sec"><h4>{sec.title}</h4>{sec.items.map((item, ii) => (<div key={ii} className="devis-item" onClick={() => toggle(ac, sec.title, sec.type, item.label, item.price)}><label><input type={sec.type === 'radio' ? 'radio' : 'checkbox'} name={sec.type === 'radio' ? ac + '-' + sec.title : undefined} checked={isSel(ac, sec.title, item.label)} onChange={() => { }} />{item.label}</label><span className="devis-price">{item.price.toLocaleString('fr-FR')} €</span></div>))}</div>))}</div>
-        <div className="devis-summary"><h3>Votre Estimation</h3><div className="summary-items">{arr.length === 0 ? <p style={{ opacity: 0.7, fontSize: 14 }}>Sélectionnez des options.</p> : arr.map((s, i) => <div key={i} className="summary-item"><span>{s.label}</span><span>{s.price.toLocaleString('fr-FR')} €</span></div>)}</div><div className="summary-total"><span>Total</span><span>{total.toLocaleString('fr-FR')} €</span></div><p className="summary-note">* Estimation indicative.</p><button className="summary-btn" onClick={() => setSent(true)}>Envoyer ma demande</button>{sent && <p style={{ marginTop: 12, textAlign: 'center', fontSize: 14, color: '#F5A623' }}>✅ Demande envoyée !</p>}</div>
+        <div className="devis-summary">
+          <h3>Votre Estimation</h3>
+          <div className="summary-items">{arr.length === 0 ? <p style={{ opacity: 0.7, fontSize: 14 }}>Sélectionnez des options.</p> : arr.map((s, i) => <div key={i} className="summary-item"><span>{s.label}</span><span>{s.price.toLocaleString('fr-FR')} €</span></div>)}</div>
+          <div className="summary-total"><span>Total</span><span>{total.toLocaleString('fr-FR')} €</span></div>
+          <p className="summary-note">* Estimation indicative.</p>
+
+          {step === 'config' && (
+            <button className="summary-btn" onClick={() => { if (arr.length > 0) setStep('form'); else alert('Sélectionnez au moins une option.') }}>Envoyer ma demande</button>
+          )}
+
+          {step === 'form' && (
+            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <p style={{ fontSize: 14, opacity: 0.9 }}>Vos coordonnées pour recevoir le devis :</p>
+              <input className="input" style={{ color: '#333' }} placeholder="Nom complet *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+              <input className="input" style={{ color: '#333' }} placeholder="Email *" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+              <input className="input" style={{ color: '#333' }} placeholder="Téléphone *" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+              <textarea className="input" style={{ color: '#333', minHeight: 60 }} placeholder="Message (optionnel)" value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button style={{ flex: 1, padding: 12, borderRadius: 25, border: '1px solid rgba(255,255,255,0.3)', background: 'transparent', color: 'white', cursor: 'pointer', fontFamily: "'Raleway',sans-serif", fontWeight: 600 }} onClick={() => setStep('config')}>← Retour</button>
+                <button className="summary-btn" style={{ flex: 2, marginTop: 0 }} onClick={handleSendDevis} disabled={sending || !form.name || !form.email || !form.phone}>{sending ? 'Envoi...' : 'Envoyer →'}</button>
+              </div>
+            </div>
+          )}
+
+          {step === 'done' && (
+            <div style={{ marginTop: 20, textAlign: 'center' }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+              <p style={{ fontSize: 16, fontWeight: 600 }}>Demande envoyée !</p>
+              <p style={{ fontSize: 13, opacity: 0.8, marginTop: 8 }}>Nous vous recontacterons sous 24h avec un devis personnalisé.</p>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )
