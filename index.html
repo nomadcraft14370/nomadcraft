@@ -1,14 +1,100 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="NomadCraft — Construction de food trucks, vans aménagés, tiny houses et location de vans. Artisan français basé en Normandie." />
-    <link rel="icon" type="image/png" href="/images/logo.png" />
-    <title>NomadCraft — Artisan de la Liberté</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ============ SEO de base ============ -->
+  <title>NomadCraft — Food trucks, vans aménagés & tiny houses sur mesure | Normandie</title>
+  <meta name="description" content="Artisan français en Normandie : fabrication sur mesure de food trucks, vans aménagés et tiny houses. Location de vans aménagés. Devis gratuit. Atelier à Argences (14)." />
+  <meta name="author" content="NomadCraft" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://nomadcraft.fr/" />
+
+  <!-- ============ Favicon ============ -->
+  <link rel="icon" type="image/png" href="/images/logo.png" />
+  <link rel="apple-touch-icon" href="/images/logo.png" />
+
+  <!-- ============ Open Graph (Facebook, LinkedIn, WhatsApp, Discord, SMS) ============ -->
+  <meta property="og:locale" content="fr_FR" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="NomadCraft — Food trucks, vans aménagés & tiny houses sur mesure" />
+  <meta property="og:description" content="Artisan français en Normandie : fabrication sur mesure de food trucks, vans aménagés et tiny houses. Location de vans aménagés. Devis gratuit." />
+  <meta property="og:url" content="https://nomadcraft.fr/" />
+  <meta property="og:site_name" content="NomadCraft" />
+  <meta property="og:image" content="https://nomadcraft.fr/images/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="NomadCraft — Construction artisanale de food trucks, vans aménagés et tiny houses" />
+
+  <!-- ============ Twitter / X Card ============ -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="NomadCraft — Food trucks, vans aménagés & tiny houses" />
+  <meta name="twitter:description" content="Artisan français en Normandie. Fabrication sur mesure de food trucks, vans aménagés, tiny houses. Location de vans. Devis gratuit." />
+  <meta name="twitter:image" content="https://nomadcraft.fr/images/og-image.jpg" />
+
+  <!-- ============ Theme color (mobile) ============ -->
+  <meta name="theme-color" content="#192f23" />
+
+  <!-- ============ Schema.org LocalBusiness (JSON-LD) ============ -->
+  <!-- Indique à Google que NomadCraft est une entreprise locale → impact direct sur le pack local Maps -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": "https://nomadcraft.fr/#business",
+    "name": "NomadCraft",
+    "alternateName": "NomadCraft SARL",
+    "description": "Artisan français spécialisé dans la fabrication sur mesure de food trucks, vans aménagés et tiny houses. Location de vans aménagés en Normandie.",
+    "url": "https://nomadcraft.fr",
+    "logo": "https://nomadcraft.fr/images/logo.png",
+    "image": "https://nomadcraft.fr/images/og-image.jpg",
+    "email": "nomadcraft14370@gmail.com",
+    "telephone": "+33603106210",
+    "priceRange": "€€-€€€",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "13 rue du Bissonnet",
+      "postalCode": "14370",
+      "addressLocality": "Argences",
+      "addressRegion": "Normandie",
+      "addressCountry": "FR"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 49.1393,
+      "longitude": -0.1547
+    },
+    "areaServed": [
+      { "@type": "AdministrativeArea", "name": "Normandie" },
+      { "@type": "AdministrativeArea", "name": "Calvados" },
+      { "@type": "Country", "name": "France" }
+    ],
+    "founder": [
+      { "@type": "Person", "name": "Enzo Pensato-Gleyze" },
+      { "@type": "Person", "name": "Zoé Danglehant" }
+    ],
+    "knowsAbout": [
+      "Fabrication de food trucks sur mesure",
+      "Aménagement de vans",
+      "Construction de tiny houses",
+      "Location de vans aménagés"
+    ],
+    "makesOffer": [
+      { "@type": "Offer", "name": "Construction de food truck sur mesure" },
+      { "@type": "Offer", "name": "Aménagement de van" },
+      { "@type": "Offer", "name": "Construction de tiny house" },
+      { "@type": "Offer", "name": "Location de van aménagé" }
+    ],
+    "sameAs": [
+      "https://www.instagram.com/nomadcraft14/",
+      "https://www.facebook.com/profile.php?id=61577511722819"
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
 </html>
