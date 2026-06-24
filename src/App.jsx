@@ -175,62 +175,73 @@ function Home() {
    components from the preview are included here. For brevity in
    this setup, they use the same logic with React Router navigation.
    See the preview artifact for the complete component code. */
-
 function LocationPage({ vans, bookings, setBookings }) {
   const [bk, setBk] = useState(null)
   const [dates, setDates] = useState([])
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' })
-  const [card, setCard] = useState({ number: '', exp: '', cvc: '', zip: '' })
   const [step, setStep] = useState(1)
-  const [processing, setProcessing] = useState(false)
-  const getBkDates = vid => bookings.filter(b => b.vanId === vid && b.status !== 'cancelled').flatMap(b => b.dates || [])
-  const formatCard = v => v.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ')
-  const formatExp = v => { const c = v.replace(/\D/g, '').slice(0, 4); return c.length > 2 ? c.slice(0, 2) + '/' + c.slice(2) : c }
+  const [sending, setSending] = useState(false)
+  // Only confirmed bookings block the calendar — pending requests must NOT,
+  // otherwise anyone could block your dates for free by spamming requests.
+  const getBkDates = vid => bookings.filter(b => b.vanId === vid && b.status === 'confirmed').flatMap(b => b.dates || [])
   const nights = dates.length >= 2 ? dates.length - 1 : 0
   const total = bk ? bk.price * nights : 0
 
-  const processPayment = async () => {
-    setProcessing(true)
+  const sendRequest = async () => {
+    setSending(true)
     try {
-      // Call your Stripe API
-      const res = await fetch('/api/create-payment', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: total, vanName: bk.name, customerEmail: form.email, customerName: form.name, dates })
-      })
-      const { clientSecret, paymentIntentId } = await res.json()
-      // In production, use Stripe.js confirmCardPayment(clientSecret)
-      // For now, simulate success:
-      const nb = { id: 'bk-' + Date.now(), vanId: bk.id, vanName: bk.name, dates, startDate: dates[0], endDate: dates[dates.length-1], nights, total, ...form, status: 'confirmed', paymentStatus: 'paid', paymentId: paymentIntentId || 'pi_' + Date.now(), createdAt: new Date().toISOString() }
+      // Save the request to Firestore as PENDING (no payment, no auto-confirm)
+      const nb = {
+        id: 'bk-' + Date.now(), vanId: bk.id, vanName: bk.name, dates,
+        startDate: dates[0], endDate: dates[dates.length-1], nights, total,
+        ...form, status: 'pending', createdAt: new Date().toISOString()
+      }
       const u = [...bookings, nb]; setBookings(u); await DB.set('bookings', u)
+      // Notify NomadCraft by email (reuses the existing EmailJS template)
+      try {
+        await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            service_id: 'service_dt7onew',
+            template_id: 'template_d5azetn',
+            user_id: 'yFKA8UF0az9q-f_qB',
+            template_params: {
+              name: form.name, email: form.email, phone: form.phone,
+              title: `Demande de réservation — ${bk.name}`,
+              message: `Van : ${bk.name}\nDates : ${dates[0]} → ${dates[dates.length-1]} (${nights} nuit${nights>1?'s':''})\nMontant estimé : ${total} €\n\nClient : ${form.name}\nEmail : ${form.email}\nTél : ${form.phone}\n\nMessage : ${form.message || 'Aucun'}`
+            }
+          })
+        })
+      } catch (e) { console.error('EmailJS error:', e) }
       setStep(4)
-    } catch (e) { console.error(e); alert('Erreur de paiement. Veuillez réessayer.') }
-    setProcessing(false)
+    } catch (e) { console.error(e); alert('Erreur lors de l\'envoi. Veuillez réessayer.') }
+    setSending(false)
   }
 
   const av = vans.filter(v => v.available)
-  const StepIndicator = () => (<div className="steps">{[['1','Dates'],['2','Infos'],['3','Paiement']].map(([n,l],i) => (<div key={n} style={{display:'flex',alignItems:'center'}}><div className={`step ${step===i+1?'active':''} ${step>i+1?'done':''}`}><div className="step-num">{step>i+1?'✓':n}</div><span>{l}</span></div>{i<2&&<div className={`step-line ${step>i+1?'done':''}`}/>}</div>))}</div>)
+  const StepIndicator = () => (<div className="steps">{[['1','Dates'],['2','Infos'],['3','Confirmation']].map(([n,l],i) => (<div key={n} style={{display:'flex',alignItems:'center'}}><div className={`step ${step===i+1?'active':''} ${step>i+1?'done':''}`}><div className="step-num">{step>i+1?'✓':n}</div><span>{l}</span></div>{i<2&&<div className={`step-line ${step>i+1?'done':''}`}/>}</div>))}</div>)
 
   return (
     <section className="sec" style={{ marginTop: 72 }}>
-      <div className="sec-h"><h2>Location de Vans</h2><p>Choisissez votre van, sélectionnez vos dates et payez en ligne.</p><div className="line" /></div>
+      <div className="sec-h"><h2>Location de Vans</h2><p>Choisissez votre van, sélectionnez vos dates et envoyez votre demande.</p><div className="line" /></div>
       <div className="vans-grid">{av.map(v => {
         const syncs = [v.icalYescapa && 'Yescapa', v.icalWikicampers && 'Wikicampers', v.icalBooking && 'Booking.com', v.icalAutre && 'Autre'].filter(Boolean)
         return (<div key={v.id} className="van-card"><img src={v.img} alt={v.name} /><div className="van-body"><h3>{v.name}</h3><div className="van-meta"><span>👤 {v.seats} places</span><span>🚐 {v.type}</span></div><p>{v.description}</p>
           {syncs.length > 0 && <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 12 }}>{syncs.map(s => <span key={s} style={{ fontSize: 10, background: '#E8F5E9', color: '#2E7D32', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>✓ {s}</span>)}</div>}
           <div className="van-price">{v.price}€ <small>/nuit</small></div>
-          <div style={{ marginTop: 16 }}><button className="btn-p" style={{ padding: '10px 24px', fontSize: 14 }} onClick={() => { setBk(v); setDates([]); setStep(1); setProcessing(false); setForm({ name: '', email: '', phone: '', message: '' }); setCard({ number: '', exp: '', cvc: '', zip: '' }) }}>Réserver & Payer</button></div>
+          <div style={{ marginTop: 16 }}><button className="btn-p" style={{ padding: '10px 24px', fontSize: 14 }} onClick={() => { setBk(v); setDates([]); setStep(1); setSending(false); setForm({ name: '', email: '', phone: '', message: '' }) }}>Réserver</button></div>
         </div></div>)
       })}{av.length === 0 && <p style={{ textAlign: 'center', color: '#777', gridColumn: '1/-1', padding: 40 }}>Aucun van disponible.</p>}</div>
 
-      {bk && (<div className="modal-bg" onClick={e => { if (e.target === e.currentTarget && step !== 3) setBk(null) }}>
+      {bk && (<div className="modal-bg" onClick={e => { if (e.target === e.currentTarget) setBk(null) }}>
         <div className="modal">
           <button style={{ position: 'absolute', top: 16, right: 20, background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: '#777' }} onClick={() => setBk(null)}>×</button>
-          {step === 4 ? (<div className="payment-success"><div className="check">✓</div><h2 style={{ color: '#192f23' }}>Paiement confirmé !</h2><p style={{ color: '#777', marginTop: 8 }}>Votre réservation est validée.</p><div className="receipt"><div className="receipt-row"><span>Van</span><strong>{bk.name}</strong></div><div className="receipt-row"><span>Dates</span><span>{dates[0]} → {dates[dates.length-1]}</span></div><div className="receipt-row"><span>Durée</span><span>{nights} nuit{nights > 1 ? 's' : ''}</span></div><div className="receipt-row total"><span>Total payé</span><span>{total} €</span></div></div><button className="btn-g" style={{ marginTop: 24, width: '100%' }} onClick={() => setBk(null)}>Fermer</button></div>) : (<>
+          {step === 4 ? (<div className="payment-success"><div className="check">✓</div><h2 style={{ color: '#192f23' }}>Demande envoyée !</h2><p style={{ color: '#777', marginTop: 8 }}>Nous vous recontactons sous 24h pour confirmer votre réservation et organiser l'acompte.</p><div className="receipt"><div className="receipt-row"><span>Van</span><strong>{bk.name}</strong></div><div className="receipt-row"><span>Dates</span><span>{dates[0]} → {dates[dates.length-1]}</span></div><div className="receipt-row"><span>Durée</span><span>{nights} nuit{nights > 1 ? 's' : ''}</span></div><div className="receipt-row total"><span>Montant estimé</span><span>{total} €</span></div></div><button className="btn-g" style={{ marginTop: 24, width: '100%' }} onClick={() => setBk(null)}>Fermer</button></div>) : (<>
             <h2 style={{ marginBottom: 4 }}>Réserver — {bk.name}</h2><p style={{ color: '#777', fontSize: 13, marginBottom: 20 }}>{bk.price}€ / nuit</p>
             <StepIndicator />
-            {step === 1 && (<><p style={{ color: '#777', marginBottom: 8, fontSize: 14 }}>Sélectionnez arrivée → départ :</p><Calendar selected={dates} onSelect={setDates} booked={getBkDates(bk.id)} />{dates.length >= 2 && <div style={{ background: '#F5F5F0', borderRadius: 12, padding: 16, marginBottom: 16 }}><div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}><span>{dates[0]} → {dates[dates.length-1]}</span><span><strong>{nights} nuit{nights > 1 ? 's' : ''}</strong></span></div><div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 18, fontWeight: 700, color: '#192f23' }}><span>Total</span><span>{total} €</span></div></div>}<button className="btn-p" style={{ width: '100%' }} onClick={() => setStep(2)} disabled={dates.length < 2}>Continuer →</button></>)}
-            {step === 2 && (<><div className="form-group"><label>Nom complet *</label><input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div><div className="form-row"><div className="form-group"><label>Email *</label><input className="input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div><div className="form-group"><label>Téléphone *</label><input className="input" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div></div><div className="form-group"><label>Message</label><textarea className="input" style={{ minHeight: 60 }} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} /></div><div style={{ display: 'flex', gap: 12 }}><button className="btn-s" style={{ flex: 1, color: '#333', borderColor: '#DDD' }} onClick={() => setStep(1)}>← Retour</button><button className="btn-p" style={{ flex: 2 }} onClick={() => setStep(3)} disabled={!form.name || !form.email || !form.phone}>Passer au paiement →</button></div></>)}
-            {step === 3 && (<><div className="stripe-total"><div className="stripe-total-row"><span>🚐 {bk.name}</span><span>{bk.price}€/nuit</span></div><div className="stripe-total-row"><span>{dates[0]} → {dates[dates.length-1]}</span><span>{nights} nuit{nights > 1 ? 's' : ''}</span></div><div className="stripe-total-row total"><span>Total</span><span>{total} €</span></div></div><div className="stripe-form"><h4>Paiement sécurisé <span className="stripe-badge">🔒 Stripe</span></h4><div className="form-group"><label style={{ color: '#525F7F' }}>Numéro de carte</label><input className="card-input" value={card.number} onChange={e => setCard({ ...card, number: formatCard(e.target.value) })} placeholder="4242 4242 4242 4242" maxLength={19} /></div><div className="card-row"><div className="form-group"><label style={{ color: '#525F7F' }}>Expiration</label><input className="card-input" value={card.exp} onChange={e => setCard({ ...card, exp: formatExp(e.target.value) })} placeholder="MM/AA" maxLength={5} /></div><div className="form-group"><label style={{ color: '#525F7F' }}>CVC</label><input className="card-input" value={card.cvc} onChange={e => setCard({ ...card, cvc: e.target.value.replace(/\D/g, '').slice(0, 3) })} placeholder="123" maxLength={3} /></div></div></div><div style={{ display: 'flex', gap: 12 }}><button className="btn-s" style={{ flex: 1, color: '#333', borderColor: '#DDD' }} onClick={() => setStep(2)}>← Retour</button><button className="btn-stripe" style={{ flex: 2 }} onClick={processPayment} disabled={processing || card.number.replace(/\s/g, '').length < 16 || card.exp.length < 5 || card.cvc.length < 3}>{processing ? 'Traitement...' : `Payer ${total} €`}</button></div><div className="secure-note">🔒 Paiement sécurisé 256-bit SSL · Powered by Stripe</div></>)}
+            {step === 1 && (<><p style={{ color: '#777', marginBottom: 8, fontSize: 14 }}>Sélectionnez arrivée → départ :</p><Calendar selected={dates} onSelect={setDates} booked={getBkDates(bk.id)} />{dates.length >= 2 && <div style={{ background: '#F5F5F0', borderRadius: 12, padding: 16, marginBottom: 16 }}><div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}><span>{dates[0]} → {dates[dates.length-1]}</span><span><strong>{nights} nuit{nights > 1 ? 's' : ''}</strong></span></div><div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 18, fontWeight: 700, color: '#192f23' }}><span>Total estimé</span><span>{total} €</span></div></div>}<button className="btn-p" style={{ width: '100%' }} onClick={() => setStep(2)} disabled={dates.length < 2}>Continuer →</button></>)}
+            {step === 2 && (<><div className="form-group"><label>Nom complet *</label><input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div><div className="form-row"><div className="form-group"><label>Email *</label><input className="input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div><div className="form-group"><label>Téléphone *</label><input className="input" type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div></div><div className="form-group"><label>Message</label><textarea className="input" style={{ minHeight: 60 }} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} /></div><div style={{ display: 'flex', gap: 12 }}><button className="btn-s" style={{ flex: 1, color: '#333', borderColor: '#DDD' }} onClick={() => setStep(1)}>← Retour</button><button className="btn-p" style={{ flex: 2 }} onClick={() => setStep(3)} disabled={!form.name || !form.email || !form.phone}>Vérifier ma demande →</button></div></>)}
+            {step === 3 && (<><div className="stripe-total"><div className="stripe-total-row"><span>🚐 {bk.name}</span><span>{bk.price}€/nuit</span></div><div className="stripe-total-row"><span>{dates[0]} → {dates[dates.length-1]}</span><span>{nights} nuit{nights > 1 ? 's' : ''}</span></div><div className="stripe-total-row total"><span>Montant estimé</span><span>{total} €</span></div></div><div style={{ background: '#F0F7F4', borderRadius: 12, padding: 16, marginBottom: 16, fontSize: 14, color: '#192f23', lineHeight: 1.6 }}><strong>{form.name}</strong><br />{form.email} · {form.phone}{form.message && <><br /><em style={{ color: '#777' }}>"{form.message}"</em></>}</div><p style={{ fontSize: 13, color: '#777', marginBottom: 16 }}>Aucun paiement n'est demandé en ligne. Nous vous recontactons pour confirmer la disponibilité et organiser l'acompte.</p><div style={{ display: 'flex', gap: 12 }}><button className="btn-s" style={{ flex: 1, color: '#333', borderColor: '#DDD' }} onClick={() => setStep(2)}>← Retour</button><button className="btn-p" style={{ flex: 2 }} onClick={sendRequest} disabled={sending}>{sending ? 'Envoi...' : 'Envoyer ma demande'}</button></div></>)}
           </>)}
         </div>
       </div>)}
